@@ -1,0 +1,140 @@
+---
+title: "Exploratory Text Analysis"
+author: "Fabiano Andrade Lima"
+date: "March 20, 2016"
+output: html_document
+---
+```{r echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+library(quanteda)
+library(wordcloud)
+library(stringi)
+library(ggplot2)
+library(knitr)
+library(scales)
+```
+
+#Introduction
+
+Our goal in this paper is to understand and explore the data from a corpus called HC Corpora (www.corpora.heliohost.org) that that will be the used as base for creating a model to predict a word given one, two or three words.
+
+First of all, we will be working with three files, as it follows:
+
+```{r cache=TRUE, warning=FALSE, message=FALSE}
+setwd("/Users/fabianoal/Documents/GitHub/Data Science Capstone Project")
+
+cname <- paste0(getwd(),"/final/en_US")
+files <- paste(cname, list.files(cname), sep="/")
+filesTbl <- as.data.frame(files)
+
+filesTbl$size <- sapply(files, function(x) file.size(x), simplify = "array")
+
+sample_size = 0.1
+set.seed(345)
+corpusVector <- vector(mode = 'character')
+lengths <- vector(mode = 'numeric')
+for (j in files){
+  f <- file(j)
+  lines <- readLines(f)
+  lengths <- append(lengths, length(lines))
+  s <- sample(length(lines), size = trunc(length(lines)*sample_size), replace=FALSE)
+  corpusVector <- append(corpusVector, lines[s])
+  close(f)
+}
+
+filesTbl$files <- gsub(paste0(cname, "/"),"",filesTbl$files)
+filesTbl$lines <- lengths
+
+kable(filesTbl)
+```
+
+#The contents
+
+In the previous step, we took advantage of the the file reading and sampled 10% of its contents to work with (`r format(trunc(sum(filesTbl$lines) * 0.1), big.mark=",", small.mark=",")` documents) so it will make possible to get a little bit of insight about the contents of the three files.
+
+Now, we use the quanteda library to create a corpus so we can check features and some other statistics about our dataset.
+
+```{r, echo=TRUE, results='hide', cache=TRUE}
+mCorpus <- quanteda::corpus(corpusVector)
+#dfm function takes care of removing ponctuations and numbers. It also applies "tolower" by default
+unigrams <- dfm(mCorpus, removeNumbers = TRUE, removePunct = TRUE, removeSeparators = TRUE, removeTwitter = TRUE)
+#now we create a vector with all features ordered by frequency (desc)
+tfUnigrams <- topfeatures(unigrams, n = ncol(unigrams))
+#then we create a data.frame so we can use it with ggplot2
+tfUnigrams <- as.data.frame(tfUnigrams)
+tfUnigrams$x <- 1:nrow(tfUnigrams)
+colnames(tfUnigrams) <- c("Frequency", "x")
+
+#this function is used to return how many unique features responds to a given % of all features
+gramsForCoverage <- function(grams, cName, thres){
+  totalTerms <- sum(grams[,c(cName)])
+  uniqueTerms <- 0
+  for (j in 1:nrow(grams)){
+    uniqueTerms <- uniqueTerms + 1
+    if (sum(grams[1:uniqueTerms, c(cName)]) >= (totalTerms * thres)){
+      break
+    }
+  }  
+  uniqueTerms
+}
+
+```
+
+From our sample, we have a total of `r format(sum(tfUnigrams$Frequency), big.mark=",")` words. This means that the entire dataset should have about `r format(sum(tfUnigrams$Frequency) * 10, big.mark=",")` words total.
+
+Besides, with only `r gramsForCoverage(tfUnigrams, "Frequency", 0.5)` unique words we cover 50% of the entire sample.
+
+This is due, in part, to the fact that in our pre-processing, we kept prepositions, articles and other, but it was on purpose. Our final goal is to create a model to predict next words based on the past one, two and three words, and in this case, those terms matters.
+
+The frequency distribution can be better understood in the plot below. The vertical line shows the number of words necessary to cover 50% of the entire sample.
+
+```{r echo=TRUE}
+g <- ggplot(tfUnigrams[1:1000,], aes(x, Frequency))
+g <- g + geom_line()
+g <- g + geom_vline(aes(xintercept = gramsForCoverage(tfUnigrams, "Frequency", 0.5)))
+g <- g + xlab("Terms")
+g <- g + scale_x_continuous(labels = comma)
+g
+```
+
+Now, to get a idea of what are these terms that respondes for 50% of the entire corpus, lets check the wordcloud below:
+
+```{r echo=TRUE}
+topFeatures <- as.data.frame(topfeatures(unigrams, n=gramsForCoverage(tfUnigrams, "Frequency", 0.5)))
+colnames(topFeatures) <- c("freq")
+
+wordcloud(words = rownames(topFeatures), freq=topFeatures$freq)
+```
+
+Exploring bigrams to see how much of the idiom we can cover
+
+```{r echo=TRUE, results='hide'}
+bigrams <- dfm(mCorpus, removeNumbers = TRUE, removePunct = TRUE, removeSeparators = TRUE, removeTwitter = TRUE, ngrams=2)
+#now we create a vector with all features ordered by frequency (desc)
+tfBigrams <- topfeatures(bigrams, n = ncol(bigrams))
+#then we create a data.frame so we can use it with ggplot2
+tfBigrams <- as.data.frame(tfBigrams)
+tfBigrams$x <- 1:nrow(tfBigrams)
+colnames(tfBigrams) <- c("Frequency", "x")
+
+format(sum(tfBigrams$Frequency) * 10, big.mark=",")
+gramsForCoverage(tfBigrams, "Frequency", 0.7)
+```
+
+From our sample, we have a total of `r format(sum(tfUnigrams$Frequency), big.mark=",")` words. This means that the entire dataset should have about `r format(sum(tfBigrams$Frequency) * 10, big.mark=",")` words total.
+
+Besides, with only `r gramsForCoverage(tfUnigrams, "Frequency", 0.5)` unique words we cover 50% of the entire sample.
+
+
+```{r echo=TRUE, results='hide'}
+trigrams <- dfm(mCorpus, removeNumbers = TRUE, removePunct = TRUE, removeSeparators = TRUE, removeTwitter = TRUE, ngrams=2)
+#now we create a vector with all features ordered by frequency (desc)
+tfTrigrams <- topfeatures(trigrams, n = ncol(trigrams))
+#then we create a data.frame so we can use it with ggplot2
+tfTrigrams <- as.data.frame(tfTrigrams)
+tfTrigrams$x <- 1:nrow(tfTrigrams)
+colnames(tfTrigrams) <- c("Frequency", "x")
+
+format(sum(tfTrigrams$Frequency) * 10, Trig.mark=",")
+gramsForCoverage(tfTrigrams, "Frequency", 0.7)
+
+```
