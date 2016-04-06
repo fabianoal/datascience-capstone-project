@@ -53,13 +53,6 @@ convertResult <- function(result){
 shinyServer(
 
   function(input, output) {
-    getdf <- reactive({
-      data.frame(
-        "wt"=c(input$wt), 
-        "qsec" = c(input$qsec), 
-        "am" = factor(c(input$am),levels=c(0,1), labels=c("Automatic","Manual"))
-      )
-    })
     dopred <- reactive({
       predict(
         slm1, 
@@ -76,12 +69,16 @@ shinyServer(
         #geom_dotplot(binwidth="y", aes(y = mpg_p, x = wt_p), data = data.frame("mpg" = dopred(), "wt" = as.numeric(input$wt)))
     })
 
-    output$textMpg <- renderText({
+    output$textOutput1 <- renderText({
       paste("The predicted mpg is ", sprintf("%.2f",dopred()), ' for the following informed values:')
     })
     
-    output$valores <- renderText({
-      paste("Weight:", input$wt, ", 1/4 mile time: ", input$qsec, ", transmission:", ifelse(input$am==0,"Automatic","Manual"))
+    output$textOutput2 <- renderText({
+      paste("The predicted mpg is ", sprintf("%.2f",dopred()), ' for the following informed values:')
+    })
+    
+    output$textOutput3 <- renderText({
+      paste("The predicted mpg is ", sprintf("%.2f",dopred()), ' for the following informed values:')
     })
   }
 )
