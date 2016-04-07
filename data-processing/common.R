@@ -92,7 +92,6 @@ removeNonWordsFromVector <- function(tok){
   tok <- sub("\\d+st","*st", tok, ignore.case = TRUE)
   t <- tolower(tok) %in% peopleNames
   t2 <- grepl("[A-Z]", tok, ignore.case = FALSE)
-  tok[t]
   tok <- sapply(1:length(tok), function(i) ifelse(t[i] == TRUE && t2[i] == TRUE, "*name", tok[i]), simplify="array")
   return(tolower(tok))
 }
