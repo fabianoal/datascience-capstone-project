@@ -61,16 +61,23 @@ prepareQuery <- function(sentence){
   return(s)
 }
 
+
+
 convertResult <- function(result){
   #return(data.frame("options" = names(wordtable[result])))
-  return(names(wordtable[result]))
+  return(paste(paste0("<a href=\"#\" class=\"list-group-item\">", names(wordtable[result]), "</a>"), collapse=""))
 }
 
 shinyServer(
   function(input, output) {
     output$prediction <- renderUI({
       #paste(input$sentence, convertResult(stupidBackoffPredict(prepareQuery(input$sentence))), sep = " ")
-      convertResult(stupidBackoffPredict(prepareQuery(input$sentence)))
+      if (is.character(input$sentence)){
+        print(paste0("sentence: ", input$sentence))
+        HTML(convertResult(stupidBackoffPredict(prepareQuery(input$sentence))))
+      }else{
+        print(paste("Not character. ", input$sentence))
+      }
     })
   }
 )
