@@ -27,13 +27,15 @@ The Processing Steps
 ========================================================
 
 To process the texts, the words were converted to numbers,
-and only about 7k words were used. This amount of words
-corresponds to more then 90% of all words occorrences in 
+and only about 12k words were used. This amount of words
+corresponds to more then 95% of all words occorrences in 
 the entire database.
 
-So this represents the scope of words that the algorithm
-is capable of predict. The processing system was made entirely
-in R and this can be extended if better precision is required.
+So this represents the scope of words that the app
+is capable of predicting. 
+
+The processing system was made entirely in R and it can be 
+extended for better precision.
 
 
 The Model
