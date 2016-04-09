@@ -1,0 +1,9 @@
+.intro .reveal .state-background {
+  background: black;
+} 
+
+.intro .reveal h1,
+.intro .reveal h2,
+.intro .reveal p {
+  color: white;
+}
