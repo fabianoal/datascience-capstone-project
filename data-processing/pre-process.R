@@ -9,6 +9,9 @@
 #https://stat.ethz.ch/R-manual/R-devel/library/base/html/sample.html
 
 #"\Program Files\Microsoft\MRO\R-3.2.3\bin\Rscript" -e "parallel:::.slaveRSOCK()" MASTER=fabiano-pc PORT=11999 OUT=/dev/null TIMEOUT=2592000 METHODS=TRUE XDR=TRUE 
+
+setwd("C:\\Users\\Fabiano\\Documents\\GitHub\\datascience-capstone-project\\data-processing")
+
 #Libraries...
 library(stringi)
 #library(caret)
@@ -19,21 +22,21 @@ library(quanteda)
 
 
 prdMode = TRUE
-numWorkers <- 2
 
 source(paste(getwd(),"common.R", sep="/"))
 
 translateToCodes <- function(tk){
-  m_stop <- stopwords()
+  m_stop <- wordtable[stopwords()]
   printLog("Tokenizing...")
   tk <- tokenize(tk, removeNumbers = TRUE, removePunct = TRUE, removeSeparators = TRUE, removeTwitter = TRUE)
   printLog("Translating...")
   l <- length(wordtable)
   tk <- lapply(tk, function(x){
-    ret <- wordtable[removeNonWordsFromVector(x)]
-    ret <- ret[!(ret %in% m_stop)]
+    ret.text <- removeNonWordsFromVector(x)
+    ret <- wordtable[ret.text]
+    # ret <- ret[!(ret %in% m_stop)]
     ret <- ret[!is.na(ret)]
-    if (length(ret) > 1)
+    if (length(ret) > 1 && (length(ret.text) == length(ret)))
       return(ret)
     else
       return (NA)
@@ -114,16 +117,8 @@ createMarkov <- function(x){
 
 
 m <- list()
-wordtable <- getObjFromFile(paste(getwd(),cacheFolder,"wordvector.RData", sep="/"))
-
-peopleNames <- compileListNames()
-
-printLog("Creating cluster")
-if (prdMode){
-  c1 <- makePSOCKcluster(names=c("fabiano-pc","fabiano-pc","macbook","macbook","macbook", "macbook", "fabiano-laptop", "fabiano-laptop","fabiano-laptop", "fabiano-laptop"), master="fabiano-pc", port=11999, homogeneous=FALSE, manual=TRUE)
-}else{
-  c1 <- makeCluster(detectCores()-1)
-}
+wordtable <- getObjFromFile(wordTableFileName())
+peopleNames <- getObjFromFile(namesFileName())
 
 clusterExport(c1, c("peopleNames", "wordtable", "splitVectorIntoChunks", "translateToCodes","groupDataframe","getFormula", "listOfVectorsToNGramMatrix", "nGramize", "createMarkov", "printLog", "removeNonWordsFromVector"))
 clusterEvalQ(c1, {
@@ -201,8 +196,7 @@ for (mNumber in 4:2){
     clusterCall(c1, gc)
   }
 }
-printLog("Stopping cluster")
-stopCluster(c1)
+
 
 
 

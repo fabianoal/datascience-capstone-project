@@ -101,6 +101,14 @@ removeNonCharacter <- function(tk){
   return(tk)
 }
 
+wordTableFileName <- function(){
+  return (paste(getwd(),cacheFolder, "wordvector.RData", sep="/"))
+}
+
+stopWordsFileName <- function(){
+  return (paste(getwd(),cacheFolder, "stopwords.RData", sep="/"))
+}
+
 nGramFileName <- function(n){
   return (paste(getwd(),cacheFolder, paste0(as.character(n),"NGram_df.RData"), sep="/"))
 }
@@ -117,7 +125,7 @@ namesFileName <- function(){
   return (paste(getwd(),cacheFolder, "Names.RData", sep="/"))
 }
 
-
+#On Windwos: "\Program Files\Microsoft\MRO\R-3.2.3\bin\Rscript.exe" -e "parallel:::.slaveRSOCK()" MASTER=fabiano-pc PORT=11999 OUT=/dev/null TIMEOUT=2592000 METHODS=TRUE XDR=TRUE
 initCl <- function(prdMode){
   printLog("Creating cluster")
   if (prdMode){
@@ -129,7 +137,8 @@ initCl <- function(prdMode){
 }
 
 
-destroyCl <- function(clId){
+stopCl <- function(clId){
   stopCluster(clId)
+  clId <- NA
 }
 

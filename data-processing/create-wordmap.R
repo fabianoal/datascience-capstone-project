@@ -15,10 +15,9 @@ library(parallel)
 
 prdMode = TRUE
 
-n_cores <- detectCores()
 #setwd("/Users/fabianoal/Documents/GitHub/Data Science Capstone Project")
 #setwd("C:\\Users\\fabianoal\\Documents\\Cursos\\Coursera\\Capstone Project")
-setwd("C:\\Users\\Fabiano\\Documents\\Coursera\\Capstone Project")
+setwd("C:\\Users\\Fabiano\\Documents\\GitHub\\datascience-capstone-project\\data-processing")
 set.seed(3546)
 
 source(paste(getwd(),"common.R", sep="/"))
@@ -44,8 +43,8 @@ groupTexts <- function(tokens1, tokens2){
 }
 
 printLog("Creating cluster")
-## "\Program Files\Microsoft\MRO\R-3.2.3\bin\Rscript.exe" -e "parallel:::.slaveRSOCK()" MASTER=localhost PORT=11999 OUT=/dev/null TIMEOUT=2592000 METHODS=TRUE XDR=TRUE
-c1 <- initCl(prdMode)
+# We're going to assume that the cluster is already in place.
+# To setup the cluster, use the manipulate_cluster.R
 
 peopleNames <- compileListNames()
   
@@ -82,7 +81,7 @@ for (f in getListOfFiles(textFilesLocation)){
 #sub("\\d+th","*th", temp)
 #sub("\\d+st","*st", temp)
 
-wordsTotalthreshold <- sum(worddf$freq) * 0.94
+wordsTotalthreshold <- sum(worddf$freq) * 0.95
 
 worddf <- ungroup(worddf)
 worddf <- arrange(worddf, desc(freq)) %>%
@@ -90,15 +89,12 @@ worddf <- arrange(worddf, desc(freq)) %>%
           filter(cumulativeSum < wordsTotalthreshold) %>%
           select(firstChar, feature)
 
-printLog("Stopping cluster")
-stopCluster(c1)
-
 printLog("Creating final vector")
 wordtable <- 1:nrow(worddf)
 
 names(wordtable) <- worddf$feature
 
 printLog("Saving wordtable")
-saveObjToFile(paste(getwd(),cacheFolder,"wordvector.RData", sep="/"), wordtable)
-
+saveObjToFile(wordTableFileName(), wordtable)
+saveObjToFile(stopWordsFileName(), stopwords())
 gc()
