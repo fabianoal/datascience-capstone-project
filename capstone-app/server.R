@@ -41,6 +41,7 @@ stupidBackoffPredict <- function(sentence, results = vector(mode = "numeric")){
       selected_row <- select(selected_interval, -T1)
     
     mvec <- append(results, base::setdiff(unlist(selected_row),results))
+    mvec <- mvec[!(is.na(mvec))]
     #mvec <- append(results, na.exclude(as.character(selected_model[sentence, -c(1)])))
     
     if (length(mvec) < 4 && length(sentence) > 1){
@@ -65,6 +66,8 @@ prepareQuery <- function(sentence){
 
 convertResult <- function(result){
   #return(data.frame("options" = names(wordtable[result])))
+  res <- wordtable[result]
+  res <- res[!grepl("\\*", res)]
   return(paste(paste0("<a href=\"#\" class=\"list-group-item\">", names(wordtable[result]), "</a>"), collapse=""))
 }
 
